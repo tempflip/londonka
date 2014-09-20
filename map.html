@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style type="text/css">
+      html, body, #map-canvas { height: 100%; margin: 0; padding: 0;}
+    </style>
+    <script type="text/javascript"
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBqkeCGF8zvutUI_bs0c-zQHYot44hQXyo">
+    </script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.25/angular.min.js"></script>
+    <script src="mapApp.js"></script>
+  </head>
+
+<body>
+  <div id="map-canvas" style="width: 70%; height: 100%; float: left;">
+  </div>
+
+  
+  <br/>
+  
+  Geocode
+  <br/>
+
+  <input id="address" type="textbox">
+  <button id="addressButton">Find!</button>
+
+  <div id="mapApp" ng-app="mapApp" ng-controller="places">
+    <div>
+      <a href="#" ng-click="newPlace.show = true" />+ Add a new place</a>
+    </div>
+
+    <div id="newPlace" ng-show="newPlace.show">
+      Latitude:
+      <input id="placeLat" type="text" ng-model="newPlace.lat"/>
+      <br/>
+
+      Longitude:
+      <input id="placeLng" type="text" ng-model="newPlace.lng"/>
+      <br/>
+
+      Place Name:
+      <input id="placeName" type="text" ng-model="newPlace.name"/>
+      <br/>
+
+      <button id="placeSet" ng-click="placeSet(newPlace);">Add</button>
+      <br/>
+    </div>
+  
+    <div ng-repeat="place in places">
+      <a href="#" ng-click="showPlace(place);">{{place.name}}</a>
+    </div>
+  </div>
+ 
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+<script type="text/javascript">
+var map;  
+var geocoder;
+var markerIcon = { url :'http://cdn2.scratch.mit.edu/get_image/gallery/325330_170x100.png?v=1389910992.98'}
+var selectedMarker;
+
+function initialize() {
+  var mapOptions = {
+    zoom: 9,
+    center: new google.maps.LatLng(47.29, 19.03)
+  };
+
+  map = new google.maps.Map(document.getElementById('map-canvas'),
+      mapOptions);
+  geocoder = new google.maps.Geocoder();
+
+  google.maps.event.addListener(map, 'click', addMarker);
+}
+
+var addMarker = function(e) {
+    //$("#placeLat").val(e.latLng.k);
+    //$("#placeLng").val(e.latLng.B);
+    angular.element(document.getElementById("newPlace")).scope().setNewPlace(e.latLng.k, e.latLng.B);
+
+    var marker = new google.maps.Marker({
+      position: new google.maps.LatLng(e.latLng.k, e.latLng.B),
+      title: $("#placeName").val(),
+      animation: google.maps.Animation.DROP,
+      icon: markerIcon,
+      draggable : true,
+    }); 
+    marker.setMap(map);
+    selectedMarker = marker;
+}
+
+
+var setMarker = function(marker) {
+    var infoContent = $("#placeName").val();
+      //+ '<img src="http://38.media.tumblr.com/tumblr_mcm79swGoQ1r1kblco1_500.gif"/>';
+
+    var infowindow = new google.maps.InfoWindow({
+        content: infoContent,
+    });  
+    google.maps.event.addListener(marker, "click", function() {
+      infowindow.open(map, marker);
+    });
+    infowindow.open(map, marker);
+}
+
+
+var showAddress = function(results, status) {
+  if (status == google.maps.GeocoderStatus.OK) {
+    var marker = new google.maps.Marker({
+      position : results[0].geometry.location,
+      draggable: true,
+      animation: google.maps.Animation.DROP,
+    });
+    marker.setMap(map);
+    map.setCenter(results[0].geometry.location);
+  }
+  else {
+    console.log('ERROR: ' + status);
+  }
+}
+
+google.maps.event.addDomListener(window, 'load', initialize);
+
+$(document).ready(function() {
+  $("#addressButton").click(function() {
+    geocoder.geocode({ 'address': $("#address").val()}, showAddress);
+  })
+});
+
+</script>
+</body>
+</html>
